@@ -1,0 +1,39 @@
+#!/bin/bash
+set -e
+
+echo "=== Archivas Network - Quick Start Script ==="
+
+# 1. Create plots directory
+mkdir -p ./plots
+
+# 2. Generate a new wallet (saves to ~/.archivas/wallet.json by default)
+echo "Generating new wallet..."
+./archivas-wallet new
+WALLET_OUTPUT=$(./archivas-wallet new)
+
+# Extract address and private key automatically
+ADDRESS=$(echo "$WALLET_OUTPUT" | grep "Address:" | awk '{print $2}')
+PRIVATE_KEY=$(echo "$WALLET_OUTPUT" | grep "Private key:" | awk '{print $2}')
+
+echo "Your address: $ADDRESS"
+echo "Your private key: $PRIVATE_KEY"
+echo "PRIVATE KEY SAVED — KEEP IT SAFE AND NEVER SHARE IT!"
+
+# 3. Create a small test plot (18 GiB ≈ 1–3 minutes on SSD, perfect for testing)
+echo "Creating a quick 18 GiB test plot (this will take 1–5 minutes)..."
+./archivas-farmer plot --size 18 --path ./plots
+
+# 4. Start the node in the background
+echo "Starting Archivas node (on http://127.0.0.1:8080)..."
+./archivas-node &
+NODE_PID=$!
+sleep 8  # give it a moment to start
+
+# 5. Start farming with your key
+echo "Starting farmer..."
+./archivas-farmer farm \
+  --plots ./plots \
+  --farmer-key $PRIVATE_KEY &
+
+FARMER_PID=$!
+echo
