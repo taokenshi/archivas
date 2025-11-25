@@ -1,0 +1,39 @@
+#!/bin/bash
+set -e
+
+echo "=== Archivas Network - Full Build Script ==="
+
+# 1. Clone the repository
+echo "Cloning Archivas repository..."
+git clone https://github.com/ArchivasNetwork/archivas.git
+cd archivas
+
+# 2. Check Go version (needs Go 1.23 or higher usually)
+echo "Checking Go version..."
+go version
+echo "If you see an error above, install Go ≥ 1.23 from https://go.dev/dl/"
+
+# 3. Download dependencies
+echo "Downloading Go modules..."
+go mod download
+go mod tidy
+
+# 4. Build all binaries with version tags and optimized flags
+echo "Building binaries..."
+
+# Recommended build flags (smaller binaries, better performance)
+CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o archivas-node ./cmd/archivas-node
+CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o archivas-farmer ./cmd/archivas-farmer  
+CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o archivas-wallet ./cmd/archivas-wallet
+
+# 5. Make them executable and move to /usr/local/bin (optional)
+echo "Installing binaries globally (requires sudo)..."
+sudo install -m 0755 archivas-node archivas-farmer archivas-wallet /usr/local/bin/
+
+echo "========================================"
+echo "All binaries built and installed successfully!"
+echo "You can now run:"
+echo "  archivas-node --help"
+echo "  archivas-farmer --help"
+echo "  archivas-wallet --help"
+echo "========================================"
